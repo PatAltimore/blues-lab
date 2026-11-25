@@ -84,12 +84,37 @@
       <p class="hint">Click any note to hear it. Frets are numbered along the bottom; the low E string is at the bottom of the diagram.</p>
     </section>
 
+    <section id="tuner-card" class="card" aria-labelledby="h-tuner">
+      <h2 id="h-tuner">Tuner</h2>
+      <div class="controls">
+        <button id="tuner-toggle" class="primary" type="button" aria-pressed="false">Start tuner</button>
+        <span class="hint tuner-hint">Standard tuning (E A D G B e). Pluck one open string at a time, away from other noise.</span>
+      </div>
+      <p id="tuner-error" class="error" role="alert"></p>
+      <div class="tuner-read">
+        <div id="tuner-note" class="tuner-note" aria-hidden="true">&ndash;</div>
+        <div>
+          <p id="tuner-status" class="tuner-status" aria-live="polite">Tuner is off</p>
+          <p id="tuner-freq" class="hint"></p>
+        </div>
+      </div>
+      <div class="meter" aria-hidden="true">
+        <span class="tick" style="left:0%">&flat;</span>
+        <span class="tick" style="left:50%">0</span>
+        <span class="tick" style="left:100%">&sharp;</span>
+        <div class="zone"></div>
+        <div id="tuner-needle" class="needle" style="left:50%"></div>
+      </div>
+      <div id="tuner-strings" class="tuner-strings" role="group" aria-label="Play a reference tone"></div>
+      <p class="hint">Tap a string to hear its pitch. The tuner turns the backing band off, because the microphone would pick it up.</p>
+    </section>
   </main>
 
   <script src="theory.js"></script>
   <script src="audio.js"></script>
   <script src="fretboard.js"></script>
   <script src="app.js"></script>
+  <script src="tuner.js"></script>
   <script src="course.js"></script>
 </body>
 </html>

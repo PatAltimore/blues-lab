@@ -3,6 +3,19 @@
 
 const LESSONS = [
   {
+    id: 'tune-up',
+    title: 'Tune your guitar',
+    goal: 'Get all six strings in tune before you play anything.',
+    steps: [
+      'Press Start tuner and allow microphone access. Pluck the thickest string (low E) on its own and let it ring.',
+      'If the needle is left of centre the string is flat, so tighten its tuning peg slightly. If it is right of centre it is sharp, so loosen it. Aim for "In tune".',
+      'Tune up to the note rather than down: if you overshoot, drop below it and come up again. Then tune A, D, G, B and the high e.',
+      'Go back to the low E at the end, since adjusting the other strings can shift it. Tap a string in the tuner to hear its reference pitch.',
+    ],
+    done: 'All six open strings read "In tune".',
+    preset: null, // opens the tuner instead of setting up the band
+  },
+  {
     id: 'hear-12-bars',
     title: 'Hear the 12 bars',
     goal: 'Recognise the 12-bar blues cycle by ear.',
@@ -213,7 +226,7 @@ function renderCourse() {
   courseEl.detail.innerHTML =
     '<h3></h3><p class="goal"></p><ol class="steps"></ol><p class="goal-done"></p>' +
     '<div class="lesson-actions">' +
-    '<button type="button" class="primary" data-act="try">Set up the band for this lesson</button>' +
+    '<button type="button" class="primary" data-act="try"></button>' +
     '<button type="button" data-act="complete"></button>' +
     '</div>';
   courseEl.detail.querySelector('h3').textContent = `Lesson ${idx + 1}: ${lesson.title}`;
@@ -222,6 +235,9 @@ function renderCourse() {
     ...lesson.steps.map((s) => Object.assign(document.createElement('li'), { textContent: s }))
   );
   courseEl.detail.querySelector('.goal-done').textContent = 'You\'re done when: ' + lesson.done;
+  courseEl.detail.querySelector('[data-act="try"]').textContent = lesson.preset
+    ? 'Set up the band for this lesson'
+    : 'Open the tuner';
   const completeBtn = courseEl.detail.querySelector('[data-act="complete"]');
   completeBtn.textContent = isDone ? '✓ Completed (undo)' : 'Mark complete';
   completeBtn.setAttribute('aria-pressed', String(isDone));
@@ -237,10 +253,10 @@ courseEl.detail.addEventListener('click', (e) => {
   const act = e.target.closest('[data-act]')?.dataset.act;
   const lesson = currentLesson();
   if (act === 'try') {
-    applyPreset(lesson.preset);
+    if (lesson.preset) applyPreset(lesson.preset);
     logPracticeDay();
     renderCourse();
-    $('#band-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $(lesson.preset ? '#band-card' : '#tuner-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else if (act === 'complete') {
     const wasDone = !!progress.data.done[lesson.id];
     if (wasDone) delete progress.data.done[lesson.id];

@@ -150,6 +150,26 @@ class BluesEngine {
     this.voice('lead', midi, this.ctx.currentTime, 1.3, { type: 'sawtooth', gain: 0.3, cutoff: 1600 });
   }
 
+  // Steady reference tone for tuning by ear.
+  async tone(midi, dur = 2.5) {
+    this.init();
+    await this.ctx.resume();
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = mtof(midi);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.35, t + 0.03);
+    g.gain.setValueAtTime(0.35, t + dur - 0.3);
+    g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g);
+    g.connect(this.bus.lead);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  }
+
   noiseHit(t, dur, filterType, freq, gain) {
     const ctx = this.ctx;
     const src = ctx.createBufferSource();

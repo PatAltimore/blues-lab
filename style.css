@@ -115,6 +115,29 @@ button.primary[aria-pressed="true"] { background: #e5484d; border-color: #e5484d
 
 .steps { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 
+/* Tuner */
+.tuner-hint { margin: 0; flex: 1 1 260px; }
+.error { color: #ff8a80; margin: 0 0 10px; min-height: 0; }
+.error:empty { display: none; }
+.tuner-read { display: flex; align-items: center; gap: 20px; margin-bottom: 14px; }
+.tuner-note { font-size: 4rem; font-weight: 800; line-height: 1; min-width: 1.4em; text-align: center; }
+.tuner-status { margin: 0; font-size: 1.3rem; font-weight: 700; }
+.tuner-read .hint { margin: 2px 0 0; }
+.meter { position: relative; height: 44px; background: var(--card-2); border-radius: 10px; margin: 0 8px 14px; }
+.meter .zone { position: absolute; top: 0; bottom: 0; left: 45%; width: 10%; background: rgba(47, 196, 178, .22); border-left: 1px solid var(--chord); border-right: 1px solid var(--chord); }
+.meter .tick { position: absolute; bottom: -20px; transform: translateX(-50%); color: var(--muted); font-size: .85rem; }
+.needle {
+  position: absolute; top: 4px; bottom: 4px; width: 4px; margin-left: -2px; border-radius: 2px;
+  background: var(--muted); transition: left .12s linear, background .12s;
+}
+.needle[data-state="ok"] { background: var(--chord); }
+.needle[data-state="off"] { background: var(--accent); }
+.tuner-strings { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 30px; }
+.string-btn { display: grid; gap: 2px; justify-items: center; padding: 8px 4px; }
+.string-btn strong { font-size: 1.3rem; }
+.string-btn span { font-size: .7rem; color: var(--muted); text-align: center; }
+.string-btn.active { border-color: var(--accent); background: #3a2a1a; }
+
 /* Course */
 .course-head { display: flex; justify-content: space-between; align-items: baseline; }
 .course-head h2 { margin-bottom: 4px; }
@@ -146,6 +169,7 @@ progress { width: 100%; height: 8px; accent-color: var(--accent); margin: 6px 0 
 @media (max-width: 640px) {
   .bars { grid-template-columns: repeat(2, 1fr); }
   .course { grid-template-columns: minmax(0, 1fr); }
+  .tuner-strings { grid-template-columns: repeat(3, 1fr); }
   .controls { gap: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
