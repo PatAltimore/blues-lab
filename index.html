@@ -84,6 +84,28 @@
       <p class="hint">Click any note to hear it. Frets are numbered along the bottom; the low E string is at the bottom of the diagram.</p>
     </section>
 
+    <section id="play-card" class="card" aria-labelledby="h-play">
+      <h2 id="h-play">Play-along</h2>
+      <div class="controls">
+        <button id="play-toggle" class="primary" type="button" aria-pressed="false">Start play-along</button>
+        <label>Lick <select id="play-lick"></select></label>
+        <label>Key <select id="play-key"></select></label>
+        <label class="tempo">Tempo
+          <input id="play-bpm" type="range" min="40" max="100" value="60">
+          <output id="play-bpm-out">60 BPM</output>
+        </label>
+      </div>
+      <p id="play-error" class="error" role="alert"></p>
+      <div class="neck-wrap"><canvas id="play-canvas" class="play-canvas" role="img" aria-label="Scrolling tab"></canvas></div>
+      <div class="play-read">
+        <p id="play-status" class="play-status" data-kind="info">Ready when you are</p>
+        <p class="hint">Heard: <strong id="play-heard">&ndash;</strong> &middot; Streak: <strong id="play-streak">0</strong></p>
+      </div>
+      <p id="play-summary" class="hint" aria-live="polite"></p>
+      <p id="play-notes" class="hint"></p>
+      <p class="hint">After a four-click count-in, the tab scrolls right to left. Play each note when it reaches the orange line. The numbers are frets and the lines are strings, with the high e on top. It checks the note name, not the octave, and works best on one string at a time. Use headphones so the clicks don't reach the microphone.</p>
+    </section>
+
     <section id="tuner-card" class="card" aria-labelledby="h-tuner">
       <h2 id="h-tuner">Tuner</h2>
       <div class="controls">
@@ -115,6 +137,7 @@
   <script src="fretboard.js"></script>
   <script src="app.js"></script>
   <script src="tuner.js"></script>
+  <script src="playalong.js"></script>
   <script src="course.js"></script>
 </body>
 </html>

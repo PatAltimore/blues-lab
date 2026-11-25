@@ -14,6 +14,7 @@ const LESSONS = [
     ],
     done: 'All six open strings read "In tune".',
     preset: null, // opens the tuner instead of setting up the band
+    open: { selector: '#tuner-card', label: 'Open the tuner' },
   },
   {
     id: 'hear-12-bars',
@@ -86,6 +87,20 @@ const LESSONS = [
     ],
     done: 'You can play the box up and down without looking at the diagram.',
     preset: { key: 'E', bpm: 60, view: 'scale', box: '1', blue: false },
+  },
+  {
+    id: 'play-along',
+    title: 'Play-along: hit the notes',
+    goal: 'Play single notes on the beat and get feedback on each one.',
+    steps: [
+      'Put on headphones so the count-in clicks don\'t reach the microphone, then press Start play-along and allow microphone access.',
+      'Choose "Root walk", the easiest lick. After four clicks, play each note as it reaches the orange line. The numbers are frets and the lines are strings.',
+      'Let each note ring until the next one is due, and aim for green (perfect). Orange means a little early or late, and red means a missed note.',
+      'Once a round goes cleanly, try "Box 1 climb", then raise the tempo.',
+    ],
+    done: 'You hit at least 80% of the notes in a round of the Box 1 climb.',
+    preset: null,
+    open: { selector: '#play-card', label: 'Open the play-along' },
   },
   {
     id: 'first-phrase',
@@ -237,7 +252,7 @@ function renderCourse() {
   courseEl.detail.querySelector('.goal-done').textContent = 'You\'re done when: ' + lesson.done;
   courseEl.detail.querySelector('[data-act="try"]').textContent = lesson.preset
     ? 'Set up the band for this lesson'
-    : 'Open the tuner';
+    : lesson.open.label;
   const completeBtn = courseEl.detail.querySelector('[data-act="complete"]');
   completeBtn.textContent = isDone ? '✓ Completed (undo)' : 'Mark complete';
   completeBtn.setAttribute('aria-pressed', String(isDone));
@@ -256,7 +271,7 @@ courseEl.detail.addEventListener('click', (e) => {
     if (lesson.preset) applyPreset(lesson.preset);
     logPracticeDay();
     renderCourse();
-    $(lesson.preset ? '#band-card' : '#tuner-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $(lesson.preset ? '#band-card' : lesson.open.selector).scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else if (act === 'complete') {
     const wasDone = !!progress.data.done[lesson.id];
     if (wasDone) delete progress.data.done[lesson.id];

@@ -187,6 +187,26 @@ class BluesEngine {
     src.stop(t + dur + 0.02);
   }
 
+  // Short noisy tick for the play-along count-in and beat. Noise rather than a
+  // pure tone so the pitch detector doesn't mistake it for a played note.
+  click(t, accent) {
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = accent ? 2600 : 1800;
+    filter.Q.value = 2;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(accent ? 0.8 : 0.45, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    src.connect(filter);
+    filter.connect(g);
+    g.connect(this.bus.lead);
+    src.start(t, Math.random() * 0.5);
+    src.stop(t + 0.06);
+  }
+
   kick(t) {
     const ctx = this.ctx;
     const osc = ctx.createOscillator();

@@ -12,13 +12,13 @@ const MIN_HZ = 70;
 const MAX_HZ = 400;
 
 // Returns { freq, clarity } or null when the signal is too quiet or unclear.
-function detectPitch(buf, sampleRate) {
+function detectPitch(buf, sampleRate, maxHz = MAX_HZ) {
   const n = buf.length;
   let energy = 0;
   for (let i = 0; i < n; i++) energy += buf[i] * buf[i];
   if (Math.sqrt(energy / n) < 0.008) return null;
 
-  const minLag = Math.floor(sampleRate / MAX_HZ);
+  const minLag = Math.floor(sampleRate / maxHz);
   const maxLag = Math.min(Math.ceil(sampleRate / MIN_HZ), n >> 1);
   const nsdf = new Float32Array(maxLag + 2);
   for (let tau = minLag - 1; tau <= maxLag + 1; tau++) {
@@ -139,6 +139,7 @@ function nearestString(freq) {
 
   async function start() {
     el.error.textContent = '';
+    if (typeof PlayAlong !== 'undefined') PlayAlong.stop(); // only one thing can use the mic
     if (!navigator.mediaDevices?.getUserMedia) {
       el.error.textContent = 'This browser does not allow microphone access here. Try Chrome, Edge or Firefox over https or localhost.';
       return;
@@ -187,4 +188,5 @@ function nearestString(freq) {
 
   el.toggle.addEventListener('click', () => (stream ? stop() : start()));
   showIdle('Tuner is off');
+  window.Tuner = { stop, isOn: () => !!stream };
 })();
