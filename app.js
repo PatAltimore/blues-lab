@@ -198,4 +198,16 @@ $('#blue').addEventListener('change', (e) => {
   renderNeck();
 });
 
+// Used by the course: set the band and fretboard up for a lesson.
+function applyPreset(p) {
+  Object.assign(state, p);
+  $('#key').value = state.key;
+  $('#bpm').value = state.bpm;
+  $('#bpm-out').textContent = state.bpm + ' BPM';
+  $('#box').value = state.box;
+  $('#blue').checked = state.blue;
+  document.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
+  renderAll();
+}
+
 renderAll();

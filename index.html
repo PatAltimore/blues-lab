@@ -13,8 +13,21 @@
   </header>
 
   <main>
-    <section class="card" aria-labelledby="h-band">
-      <h2 id="h-band">1. Backing band</h2>
+    <section class="card" aria-labelledby="h-course">
+      <div class="course-head">
+        <h2 id="h-course">Your course</h2>
+        <button id="course-reset" type="button" class="link">Reset progress</button>
+      </div>
+      <p id="course-summary" class="hint"></p>
+      <progress id="course-progress" value="0" max="9" aria-labelledby="h-course"></progress>
+      <div class="course">
+        <ol id="lesson-list" class="lesson-list"></ol>
+        <div id="lesson-detail" class="lesson-detail"></div>
+      </div>
+    </section>
+
+    <section id="band-card" class="card" aria-labelledby="h-band">
+      <h2 id="h-band">Backing band</h2>
       <div class="controls">
         <button id="play" class="primary" type="button" aria-pressed="false">&#9654; Play</button>
         <label>Key
@@ -35,7 +48,7 @@
     </section>
 
     <section class="card now" aria-labelledby="h-now">
-      <h2 id="h-now">2. Current chord</h2>
+      <h2 id="h-now">Current chord</h2>
       <div class="now-body">
         <svg id="chord-diagram" class="chord-diagram" role="img" aria-label="Chord diagram"></svg>
         <div>
@@ -48,7 +61,7 @@
     </section>
 
     <section class="card" aria-labelledby="h-neck">
-      <h2 id="h-neck">3. Fretboard</h2>
+      <h2 id="h-neck">Fretboard</h2>
       <div class="controls">
         <div class="seg" role="group" aria-label="What to show">
           <button type="button" data-view="scale" aria-pressed="true">Scale notes</button>
@@ -71,20 +84,12 @@
       <p class="hint">Click any note to hear it. Frets are numbered along the bottom; the low E string is at the bottom of the diagram.</p>
     </section>
 
-    <section class="card" aria-labelledby="h-how">
-      <h2 id="h-how">How to practise</h2>
-      <ol class="steps">
-        <li><strong>Learn the chords.</strong> Pick a key, press Play, and follow the highlighted bar, switching chords when it changes. Start slow (60&ndash;70 BPM).</li>
-        <li><strong>Learn Box 1.</strong> Switch to Scale notes, choose Box 1, and play up and down the notes of that shape over the band.</li>
-        <li><strong>Make phrases.</strong> Pick two or three notes, repeat a short rhythm, and finish on the orange root note. Use the blue note as a passing note, never somewhere to rest.</li>
-        <li><strong>Follow the changes.</strong> When the chord moves to IV or V, aim for that chord's notes (switch to Chord notes to see them).</li>
-      </ol>
-    </section>
   </main>
 
   <script src="theory.js"></script>
   <script src="audio.js"></script>
   <script src="fretboard.js"></script>
   <script src="app.js"></script>
+  <script src="course.js"></script>
 </body>
 </html>
