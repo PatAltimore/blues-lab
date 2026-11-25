@@ -3,16 +3,19 @@
 
 const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
-// Bass line per bar, in semitones above the chord root (classic shuffle walk).
-const BASS_WALK = [0, 4, 7, 9, 10, 9, 7, 4];
-const STEPS_PER_BEAT = 3; // triplet grid; shuffle plays steps 0 and 2
-const STEPS_PER_BAR = 4 * STEPS_PER_BEAT;
-const TOTAL_STEPS = 12 * STEPS_PER_BAR;
+// Bass line per bar, in semitones above the chord root (classic walking line).
+const BASS_WALK = {
+  dom: [0, 4, 7, 9, 10, 9, 7, 4],
+  min: [0, 3, 7, 9, 10, 9, 7, 3],
+};
+// Grid steps per beat for each feel. Shuffle uses a triplet grid and plays
+// steps 0 and 2 (swung eighths); straight plays plain eighths on steps 0 and 1.
+const FEELS = { shuffle: 3, straight: 2 };
 
 class BluesEngine {
   constructor(getState, onTick) {
-    this.getState = getState; // () => ({ keyPc, bpm })
-    this.onTick = onTick; // ({ bar, beat }) or null when stopped
+    this.getState = getState; // () => ({ keyPc, bpm, prog, feel })
+    this.onTick = onTick; // ({ bar, beat, sub, chorus }) or null when stopped
     this.ctx = null;
     this.playing = false;
     this.events = [];
@@ -53,7 +56,10 @@ class BluesEngine {
   async start() {
     this.init();
     await this.ctx.resume();
-    this.step = 0;
+    this.bar = 0;
+    this.tick = 0;
+    this.chorus = 0;
+    this.feel = this.getState().feel;
     this.nextTime = this.ctx.currentTime + 0.08;
     this.events = [];
     this.playing = true;
@@ -77,45 +83,53 @@ class BluesEngine {
 
   pump() {
     while (this.nextTime < this.ctx.currentTime + 0.12) {
-      this.scheduleStep(this.step, this.nextTime);
-      this.nextTime += 60 / this.getState().bpm / STEPS_PER_BEAT;
-      this.step = (this.step + 1) % TOTAL_STEPS;
+      const perBeat = FEELS[this.feel];
+      this.scheduleStep(this.bar, this.tick, this.nextTime);
+      this.nextTime += 60 / this.getState().bpm / perBeat;
+      if (++this.tick === 4 * perBeat) {
+        this.tick = 0;
+        this.bar = (this.bar + 1) % 12;
+        if (this.bar === 0) this.chorus++;
+        this.feel = this.getState().feel; // a new feel starts on the next bar
+      }
     }
   }
 
-  scheduleStep(step, t) {
-    const { keyPc, bpm } = this.getState();
+  scheduleStep(bar, tick, t) {
+    const { keyPc, bpm, prog } = this.getState();
     const beatDur = 60 / bpm;
-    const bar = Math.floor(step / STEPS_PER_BAR);
-    const inBar = step % STEPS_PER_BAR;
-    const beat = Math.floor(inBar / STEPS_PER_BEAT);
-    const sub = inBar % STEPS_PER_BEAT;
-    this.events.push({ t, bar, beat, sub });
-    if (sub === 1) return; // the swung "skipped" triplet
+    const shuffle = this.feel === 'shuffle';
+    const perBeat = FEELS[this.feel];
+    const beat = Math.floor(tick / perBeat);
+    const sub = tick % perBeat;
+    this.events.push({ t, bar, beat, sub, chorus: this.chorus });
+    if (shuffle && sub === 1) return; // the swung "skipped" triplet
 
-    const { pc } = chordAt(keyPc, bar);
+    const chord = chordAt(keyPc, bar, prog);
+    const onBeat = sub === 0;
 
     // Drums
-    if (sub === 0) {
+    if (onBeat) {
       if (beat === 0 || beat === 2) this.kick(t);
       else this.snare(t);
     }
-    this.hat(t, sub === 0 ? 0.35 : 0.18);
+    this.hat(t, onBeat ? 0.35 : 0.18);
 
-    // Bass: eight swung notes per bar
-    const eighth = beat * 2 + (sub === 2 ? 1 : 0);
-    const rootMidi = 28 + ((pc - 4 + 12) % 12); // E1..D#2
-    this.voice('bass', rootMidi + BASS_WALK[eighth], t, sub === 0 ? beatDur * 0.6 : beatDur * 0.28, {
+    // Bass: eight notes per bar (swung or straight)
+    const eighth = beat * 2 + (onBeat ? 0 : 1);
+    const rootMidi = 28 + ((chord.pc - 4 + 12) % 12); // E1..D#2
+    const bassDur = shuffle ? (onBeat ? beatDur * 0.6 : beatDur * 0.28) : beatDur * 0.42;
+    this.voice('bass', rootMidi + BASS_WALK[chord.quality][eighth], t, bassDur, {
       type: 'triangle',
       gain: 0.55,
       cutoff: 700,
     });
 
     // Chord stabs on every beat, strongest on the backbeat (2 and 4)
-    if (sub === 0) {
-      const r = 52 + ((pc - 4 + 12) % 12);
+    if (onBeat) {
+      const r = 52 + ((chord.pc - 4 + 12) % 12);
       const vel = beat === 1 || beat === 3 ? 0.17 : 0.09;
-      for (const iv of [0, 4, 7, 10]) {
+      for (const iv of chordIntervals(chord.quality)) {
         this.voice('chords', r + iv, t, beatDur * 0.3, { type: 'sawtooth', gain: vel, cutoff: 1800 });
       }
     }

@@ -150,6 +150,20 @@ const LESSONS = [
     done: 'You played a chorus in A at 90 BPM or faster.',
     preset: { key: 'A', bpm: 80, view: 'scale', box: '1', blue: true },
   },
+  {
+    id: 'jam-session',
+    title: 'Jam session',
+    goal: 'Improvise freely over the band, one idea per chorus.',
+    steps: [
+      'Open the jam sandbox and press Play. Start with the minor pentatonic and the whole neck, or pick one neck area to stay in one position.',
+      'Work through the suggestion shown for each chorus: roots only, two-note phrases, landing on green notes at every chord change, and call and response.',
+      'Watch the "Next" countdown and the dashed ring on the fretboard so you know where the next chord\'s root is before it arrives.',
+      'Then try the other progressions and scales. The minor blues and the "Follow the chords" scale sound very different.',
+    ],
+    done: 'You played at least three choruses in a row and tried one new scale or progression.',
+    preset: null,
+    open: { selector: '#jam-card', label: 'Open the jam sandbox' },
+  },
 ];
 
 const COURSE_KEY = 'bluesLab.course.v1';

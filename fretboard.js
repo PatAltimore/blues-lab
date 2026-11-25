@@ -49,17 +49,27 @@ function createFretboard(svg, onNote) {
     if (g) onNote(Number(g.dataset.midi));
   });
 
-  function render({ keyPc, chordPc, view, box, blue }) {
+  // view 'scale' / 'chord' are the explorer views. view 'jam' shows an arbitrary
+  // set of scale pitch classes (scalePcs) within fret `zone` ranges, with the
+  // current chord's tones as targets and an optional ring on the next chord's root.
+  function render({ keyPc, chordPc, tones: chordPcs, view, box, blue, scalePcs, zone, blueScale, nextRootPc }) {
     dots.replaceChildren();
-    const ranges = boxRanges(keyPc, box);
-    const tones = chordTones(chordPc);
+    const ranges = view === 'jam' ? zone : boxRanges(keyPc, box);
+    const tones = chordPcs || chordTones(chordPc);
     for (let i = 0; i < 6; i++) {
       for (let f = 0; f <= MAX_FRET; f++) {
         const midi = OPEN_STRINGS[i] + f;
         const pc = midi % 12;
         const rel = (pc - keyPc + 12) % 12;
         let cls = null;
-        if (view === 'scale') {
+        if (view === 'jam') {
+          if (!scalePcs.has(pc) || !inRanges(f, ranges)) continue;
+          if (pc === chordPc) cls = 'root';
+          else if (tones.includes(pc)) cls = 'chord';
+          else if (blueScale && rel === BLUE_NOTE) cls = 'blue';
+          else cls = 'scale';
+          if (nextRootPc != null && pc === nextRootPc && cls !== 'root') cls += ' next';
+        } else if (view === 'scale') {
           const inScale = PENT_MINOR.includes(rel) || (blue && rel === BLUE_NOTE);
           if (!inScale || !inRanges(f, ranges)) continue;
           if (rel === 0) cls = 'root';

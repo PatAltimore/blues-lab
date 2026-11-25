@@ -164,6 +164,18 @@ progress { width: 100%; height: 8px; accent-color: var(--accent); margin: 6px 0 
 .lesson-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .lesson-actions button[aria-pressed="true"] { border-color: var(--chord); color: var(--chord); }
 
+/* Jam sandbox */
+.jam-intro { margin: 0 0 12px; }
+.jam-strip { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; margin: 6px 0 12px; }
+.jam-now { margin: 0; }
+.jam-chord { font-size: 2.6rem; font-weight: 800; line-height: 1.1; }
+.jam-next { margin: 0; font-size: 1.2rem; font-weight: 700; }
+.jam-strip .hint { margin: 2px 0 0; }
+.jam-prompt { margin: 0 0 14px; padding: 10px 14px; background: var(--card-2); border-left: 4px solid var(--accent); border-radius: 8px; }
+.jam-targets { margin: 10px 0 0; }
+.dot.next circle { stroke: #fff; stroke-width: 3; stroke-dasharray: 4 3; }
+.legend li.ring::before { background: transparent; border: 2px dashed #fff; box-sizing: border-box; }
+
 /* Play-along */
 .play-canvas { display: block; width: 100%; min-width: 680px; aspect-ratio: 1000 / 250; }
 .play-read { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: baseline; margin-top: 12px; }

@@ -8,18 +8,22 @@ const state = {
   view: 'scale', // 'scale' | 'chord'
   box: 'all', // 'all' | '1'..'5'
   blue: true,
+  progression: 'standard', // key of PROGRESSIONS
+  feel: 'shuffle', // key of FEELS
+  scale: 'minor', // jam sandbox scale, key of SCALES
+  zone: 'all', // jam sandbox neck area
   bar: null, // current bar while playing, else null
 };
 
 const engine = new BluesEngine(
-  () => ({ keyPc: KEYS[state.key], bpm: state.bpm }),
+  () => ({ keyPc: KEYS[state.key], bpm: state.bpm, prog: state.progression, feel: state.feel }),
   (tick) => onTick(tick)
 );
 const fretboard = createFretboard($('#neck'), (midi) => engine.pluck(midi));
 
 const keyPc = () => KEYS[state.key];
-// When stopped, show the I chord so the diagrams are never empty.
-const currentChord = () => chordAt(keyPc(), state.bar ?? 0);
+// When stopped, show the first chord so the diagrams are never empty.
+const currentChord = () => chordAt(keyPc(), state.bar ?? 0, state.progression);
 
 // ---- 12-bar grid --------------------------------------------------------
 
@@ -36,8 +40,8 @@ for (let i = 0; i < 12; i++) {
 
 function renderBars() {
   barEls.forEach((el, i) => {
-    const c = chordAt(keyPc(), i);
-    el.querySelector('.name').textContent = chordName(c.pc);
+    const c = chordAt(keyPc(), i, state.progression);
+    el.querySelector('.name').textContent = c.name;
     el.querySelector('.rn').textContent = c.numeral;
   });
 }
@@ -53,14 +57,13 @@ function markActive(bar, beat) {
 
 function renderNow() {
   const c = currentChord();
-  const name = chordName(c.pc);
-  $('#now-name').textContent = name;
+  $('#now-name').textContent = c.name;
   $('#now-numeral').textContent = c.numeral;
-  const roles = ['R', '3', '5', '♭7'];
-  $('#now-tones').textContent = 'Notes: ' + chordTones(c.pc).map((pc, i) => `${NOTE_NAMES[pc]} (${roles[i]})`).join('  ');
+  const roles = ['R', c.quality === 'min' ? '♭3' : '3', '5', '♭7'];
+  $('#now-tones').textContent = 'Notes: ' + c.tones.map((pc, i) => `${NOTE_NAMES[pc]} (${roles[i]})`).join('  ');
   $('#now-tip').textContent = TIPS[c.numeral](NOTE_NAMES[c.pc]);
-  drawChordDiagram($('#chord-diagram'), SHAPES[name]);
-  $('#chord-diagram').setAttribute('aria-label', `${name} chord diagram`);
+  drawChordDiagram($('#chord-diagram'), chordShape(c.pc, c.quality));
+  $('#chord-diagram').setAttribute('aria-label', `${c.name} chord diagram`);
 }
 
 // ---- Fretboard ----------------------------------------------------------
@@ -79,9 +82,11 @@ const LEGENDS = {
 };
 
 function renderNeck() {
+  const chord = currentChord();
   fretboard.render({
     keyPc: keyPc(),
-    chordPc: currentChord().pc,
+    chordPc: chord.pc,
+    tones: chord.tones,
     view: state.view,
     box: state.box,
     blue: state.blue,
@@ -105,6 +110,7 @@ function renderAll() {
   renderBars();
   renderNow();
   renderNeck();
+  if (typeof Jam !== 'undefined') Jam.render();
 }
 
 // ---- Playback ticks -----------------------------------------------------
@@ -117,6 +123,7 @@ function onTick(tick) {
     markActive(-1, -1);
     renderNow();
     renderNeck();
+    if (typeof Jam !== 'undefined') Jam.tick(null);
     return;
   }
   markActive(tick.bar, tick.beat);
@@ -126,6 +133,7 @@ function onTick(tick) {
     renderNow();
     renderNeck();
   }
+  if (typeof Jam !== 'undefined') Jam.tick(tick);
 }
 
 // ---- Controls -----------------------------------------------------------
@@ -135,11 +143,14 @@ for (const k of Object.keys(KEYS)) {
   o.value = o.textContent = k;
   $('#key').append(o);
 }
+for (const [id, p] of Object.entries(PROGRESSIONS)) $('#progression').append(new Option(p.name, id));
 
-const playBtn = $('#play');
+// Both the band card and the jam card have a play button.
 function setPlaying(on) {
-  playBtn.setAttribute('aria-pressed', String(on));
-  playBtn.innerHTML = on ? '&#9632; Stop' : '&#9654; Play';
+  document.querySelectorAll('.play-btn').forEach((btn) => {
+    btn.setAttribute('aria-pressed', String(on));
+    btn.innerHTML = on ? '&#9632; Stop' : '&#9654; Play';
+  });
 }
 
 async function togglePlay() {
@@ -158,7 +169,7 @@ async function togglePlay() {
   }
 }
 
-playBtn.addEventListener('click', togglePlay);
+document.querySelectorAll('.play-btn').forEach((btn) => btn.addEventListener('click', togglePlay));
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && !/^(INPUT|SELECT|BUTTON|TEXTAREA)$/.test(e.target.tagName)) {
     e.preventDefault();
@@ -174,6 +185,17 @@ $('#key').addEventListener('change', (e) => {
 $('#bpm').addEventListener('input', (e) => {
   state.bpm = Number(e.target.value);
   $('#bpm-out').textContent = state.bpm + ' BPM';
+  if (typeof Jam !== 'undefined') Jam.render();
+});
+
+$('#progression').addEventListener('change', (e) => {
+  state.progression = e.target.value;
+  renderAll();
+});
+
+$('#feel').addEventListener('change', (e) => {
+  state.feel = e.target.value; // takes effect at the next bar
+  if (typeof Jam !== 'undefined') Jam.render();
 });
 
 document.querySelectorAll('[data-mix]').forEach((cb) => {
@@ -200,7 +222,10 @@ $('#blue').addEventListener('change', (e) => {
 
 // Used by the course: set the band and fretboard up for a lesson.
 function applyPreset(p) {
-  Object.assign(state, p);
+  // Lessons are written for the standard shuffle 12-bar, so reset those too.
+  Object.assign(state, { progression: 'standard', feel: 'shuffle' }, p);
+  $('#progression').value = state.progression;
+  $('#feel').value = state.feel;
   $('#key').value = state.key;
   $('#bpm').value = state.bpm;
   $('#bpm-out').textContent = state.bpm + ' BPM';
