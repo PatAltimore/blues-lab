@@ -128,8 +128,9 @@ button.primary[aria-pressed="true"] { background: #e5484d; border-color: #e5484d
 .meter .tick { position: absolute; bottom: -20px; transform: translateX(-50%); color: var(--muted); font-size: .85rem; }
 .needle {
   position: absolute; top: 4px; bottom: 4px; width: 4px; margin-left: -2px; border-radius: 2px;
-  background: var(--muted); transition: left .12s linear, background .12s;
+  background: var(--muted); transition: left .05s linear, background .12s, opacity .2s;
 }
+.needle[data-state="stale"] { opacity: .35; }
 .needle[data-state="ok"] { background: var(--chord); }
 .needle[data-state="off"] { background: var(--accent); }
 .tuner-strings { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 30px; }

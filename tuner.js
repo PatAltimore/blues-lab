@@ -10,13 +10,14 @@ const TUNER_STRINGS = OPEN_STRINGS.slice()
 const IN_TUNE_CENTS = 5;
 const MIN_HZ = 70;
 const MAX_HZ = 400;
+const TUNER_MIN_RMS = 0.002; // quiet enough for a decaying string; the clarity test rejects noise
 
 // Returns { freq, clarity } or null when the signal is too quiet or unclear.
-function detectPitch(buf, sampleRate, maxHz = MAX_HZ) {
+function detectPitch(buf, sampleRate, maxHz = MAX_HZ, minRms = 0.008) {
   const n = buf.length;
   let energy = 0;
   for (let i = 0; i < n; i++) energy += buf[i] * buf[i];
-  if (Math.sqrt(energy / n) < 0.008) return null;
+  if (Math.sqrt(energy / n) < minRms) return null;
 
   const minLag = Math.floor(sampleRate / maxHz);
   const maxLag = Math.min(Math.ceil(sampleRate / MIN_HZ), n >> 1);
@@ -93,47 +94,59 @@ function nearestString(freq) {
   let lastHeard = 0;
   let history = [];
 
+  // Skip no-op writes so the live status isn't re-announced by screen readers.
+  const setText = (node, text) => {
+    if (node.textContent !== text) node.textContent = text;
+  };
+
   function showIdle(message) {
-    el.note.textContent = '–';
-    el.freq.textContent = '';
+    setText(el.note, '–');
+    setText(el.freq, '');
     el.needle.style.left = '50%';
     el.needle.dataset.state = '';
-    el.status.textContent = message;
+    setText(el.status, message);
     stringBtns.forEach((b) => b.classList.remove('active'));
   }
 
   function showReading(freq) {
     const { string, cents } = nearestString(freq);
     const inTune = Math.abs(cents) <= IN_TUNE_CENTS;
-    el.note.textContent = string.name;
-    el.freq.textContent = `String ${string.num} · ${freq.toFixed(1)} Hz · ${cents > 0 ? '+' : ''}${cents.toFixed(0)} cents`;
+    setText(el.note, string.name);
+    setText(el.freq, `String ${string.num} · ${freq.toFixed(1)} Hz · ${cents > 0 ? '+' : ''}${cents.toFixed(0)} cents`);
     el.needle.style.left = 50 + Math.max(-50, Math.min(50, cents)) + '%';
     el.needle.dataset.state = inTune ? 'ok' : 'off';
-    el.status.textContent = inTune
-      ? 'In tune'
-      : cents < 0
-        ? 'Flat: tighten the string'
-        : 'Sharp: loosen the string';
+    setText(el.status, inTune ? 'In tune' : cents < 0 ? 'Flat: tighten the string' : 'Sharp: loosen the string');
     stringBtns.forEach((b, i) => b.classList.toggle('active', TUNER_STRINGS[i] === string));
   }
 
+  // Analyse every ~25 ms and smooth over only three readings, so the needle
+  // follows the pitch closely while you turn the tuning peg.
+  const HOP_MS = 25;
   function loop(now) {
     raf = requestAnimationFrame(loop);
-    if (now - lastRun < 50) return;
+    if (now - lastRun < HOP_MS) return;
     lastRun = now;
     analyser.getFloatTimeDomainData(buf);
-    const r = detectPitch(buf, engine.ctx.sampleRate);
+    const r = detectPitch(buf, engine.ctx.sampleRate, MAX_HZ, TUNER_MIN_RMS);
     if (r) {
       lastHeard = now;
       const prev = history.length ? history[history.length - 1] : null;
       if (prev && Math.abs(1200 * Math.log2(r.freq / prev)) > 80) history = []; // new string plucked
       history.push(r.freq);
-      if (history.length > 5) history.shift();
+      if (history.length > 3) history.shift();
       const sorted = history.slice().sort((x, y) => x - y);
       showReading(sorted[sorted.length >> 1]);
-    } else if (now - lastHeard > 800) {
+      return;
+    }
+    // No clear pitch (string too quiet, or the pitch is changing fast). Keep the
+    // last reading but dim it, and only give up after a couple of seconds.
+    const quiet = now - lastHeard;
+    if (quiet > 2500) {
       history = [];
       showIdle('Pluck a string');
+    } else if (quiet > 300 && el.needle.dataset.state) {
+      el.needle.dataset.state = 'stale';
+      setText(el.status, 'Listening… pluck again if the needle has stopped');
     }
   }
 
