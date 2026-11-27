@@ -37,12 +37,6 @@ body {
   text-transform: uppercase; letter-spacing: .14em; color: #ffd9a0;
   text-shadow: 0 0 6px rgba(255, 190, 100, .9), 0 0 22px rgba(255, 107, 74, .75), 0 0 48px rgba(255, 107, 74, .4);
 }
-.page-head h1::after {
-  content: "\266A  \00B7  live tonight  \00B7  \266A"; display: block; margin-top: 6px;
-  font: italic 400 .85rem/1 var(--serif); letter-spacing: .3em; text-transform: lowercase;
-  color: var(--neon); text-shadow: 0 0 8px rgba(255, 107, 74, .7);
-}
-.page-head p { margin: 10px 0 0; color: var(--muted); font-family: var(--serif); font-style: italic; }
 
 main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-bottom: 48px; padding-top: 12px; }
 
